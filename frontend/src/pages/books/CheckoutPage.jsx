@@ -1,20 +1,28 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import Swal from "sweetalert2";
+import { useCreateOrderMutation } from "../../redux/features/orders/ordersApi";
 
 const CheckoutPage = () => {
   const cartItems = useSelector((state) => state.cart.cartItems);
   const totalPrice = cartItems
     .reduce((acc, item) => acc + item.newPrice, 0)
     .toFixed(2);
+  const { currentUser } = useAuth();
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
   } = useForm();
-  const onSubmit = (data) => {
+
+  const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+  const navigate = useNavigate();
+
+  const onSubmit = async (data) => {
     const newOrder = {
       name: data.name,
       email: currentUser?.email,
@@ -28,10 +36,23 @@ const CheckoutPage = () => {
       productIds: cartItems.map((item) => item?._id),
       totalPrice: totalPrice,
     };
-    console.log(newOrder);
+    try {
+      await createOrder(newOrder).unwrap();
+      Swal.fire({
+        title: "Thành công!",
+        text: "Đơn hàng của bạn đã được đặt thành công.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Tuyệt vời!",
+      });
+      navigate("/orders");
+    } catch (error) {
+      console.error("Lỗi đặt hàng!", error);
+      alert("Không thể đặt hàng ");
+    }
   };
-  const currentUser = true;
   const [isChecked, setIsChecked] = useState(false);
+  if (isLoading) return <div>Đang tải....</div>;
   return (
     <section>
       <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
@@ -66,6 +87,7 @@ const CheckoutPage = () => {
                           name="name"
                           id="name"
                           className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                          {...register("name", { required: true })}
                         />
                       </div>
 
@@ -88,6 +110,7 @@ const CheckoutPage = () => {
                           name="phone"
                           id="phone"
                           className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                          {...register("phone", { required: true })}
                           placeholder="+123 456 7890"
                         />
                       </div>
@@ -99,6 +122,7 @@ const CheckoutPage = () => {
                           name="address"
                           id="address"
                           className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                          {...register("address", { required: true })}
                           placeholder=""
                         />
                       </div>
@@ -110,6 +134,7 @@ const CheckoutPage = () => {
                           name="city"
                           id="city"
                           className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                          {...register("city", { required: true })}
                           placeholder=""
                         />
                       </div>
@@ -122,6 +147,7 @@ const CheckoutPage = () => {
                             id="country"
                             placeholder="Country"
                             className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
+                            {...register("country", { required: true })}
                           />
                           <button
                             tabIndex="-1"
@@ -167,6 +193,7 @@ const CheckoutPage = () => {
                             id="state"
                             placeholder="State"
                             className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
+                            {...register("state", { required: true })}
                           />
                           <button className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600">
                             <svg
@@ -208,6 +235,7 @@ const CheckoutPage = () => {
                           name="zipcode"
                           id="zipcode"
                           className="transition-all flex items-center h-10 border mt-1 rounded px-4 w-full bg-gray-50"
+                          {...register("zipcode", { required: true })}
                           placeholder=""
                         />
                       </div>
@@ -219,6 +247,8 @@ const CheckoutPage = () => {
                             name="billing_same"
                             id="billing_same"
                             className="form-checkbox"
+                            checked={isChecked}
+                            onChange={() => setIsChecked(!isChecked)}
                           />
                           <label htmlFor="billing_same" className="ml-2 ">
                             I am aggree to the{" "}
