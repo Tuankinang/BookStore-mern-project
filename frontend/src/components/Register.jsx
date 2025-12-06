@@ -1,12 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaGoogle } from "react-icons/fa";
 import { useForm } from "react-hook-form";
 import { useAuth } from "../context/AuthContext";
+import axios from "axios"; 
+import getBaseUrl from "../utils/baseUrl";
 
 const Register = () => {
   const [message, setMessage] = useState("");
   const { registerUser, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
   console.log(registerUser);
   const {
     register,
@@ -18,6 +22,11 @@ const Register = () => {
     //console.log(data)
     try {
       await registerUser(data.email, data.password);
+      await axios.post(`${getBaseUrl()}/api/auth/register`, {
+          username: data.email, 
+          email: data.email,
+          password: data.password 
+      });
       alert("Đăng ký thành công!");
     } catch (error) {
       setMessage("Vui lòng nhập email và mật khẩu hợp lệ!");

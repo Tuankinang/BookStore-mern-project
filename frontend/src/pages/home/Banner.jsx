@@ -9,15 +9,12 @@ const Banner = () => {
       </div>
       <div className="md:w-1/2 w-full">
         <h1 className="md:text-5xl text-2xl font-medium mb-7">
-          New Releases This Week
+          Bản phát hành mới trong tuần này
         </h1>
         <p className="mb-10">
-          It's time to update your reading list with some of the latest and
-          greatest releases in the literary world. From heart-pumping thrillers
-          to captivating memoirs, this week's new releases offer something for
-          everyone.
+          Đã đến lúc cập nhật danh sách đọc của bạn với những tác phẩm mới nhất và tuyệt vời nhất trong thế giới văn học. Từ những câu chuyện ly kỳ nghẹt thở đến những hồi ký lôi cuốn, những tác phẩm mới ra mắt tuần này sẽ mang đến điều gì đó cho tất cả mọi người.
         </p>
-        <button className="btn-primary">Subscribe</button>
+        <button className="btn-primary">Đặt mua</button>
       </div>
     </div>
   );

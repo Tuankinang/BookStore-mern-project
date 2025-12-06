@@ -21,25 +21,15 @@ ChartJS.register(
   Legend
 );
 
-const RevenueChart = () => {
-  const revenueData = [
-    500, 700, 800, 600, 750, 900, 650, 870, 960, 1020, 1100, 1150,
-  ];
+const RevenueChart = ({ data: monthlyData }) => {
+  const revenueData =
+    Array.isArray(monthlyData) && monthlyData.length === 12
+      ? monthlyData
+      : [500, 700, 800, 600, 750, 900, 650, 870, 960, 1020, 1100, 1150];
 
   const data = {
     labels: [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",
     ],
     datasets: [
       {
@@ -48,36 +38,38 @@ const RevenueChart = () => {
         backgroundColor: "rgba(34, 197, 94, 0.7)",
         borderColor: "rgba(34, 197, 94, 1)",
         borderWidth: 1,
+        borderRadius: 6,
       },
     ],
   };
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false, 
     plugins: {
-      legend: {
-        position: "top",
-      },
+      legend: { display: false },
       title: {
-        display: true,
-        text: "Monthly Revenue",
+        display: false, 
+      },
+      tooltip: {
+        mode: "index",
+        intersect: false,
       },
     },
     scales: {
       y: {
         beginAtZero: true,
+        grid: { color: "rgba(0,0,0,0.06)" },
+      },
+      x: {
+        grid: { display: false },
       },
     },
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto p-4 bg-white shadow-lg rounded-lg">
-      <h2 className="text-center text-2xl font-bold text-gray-800 mb-4">
-        Monthly Revenue
-      </h2>
-      <div className="hidden md:block">
-        <Bar data={data} options={options} className="" />
-      </div>
+    <div className="w-full h-full">
+      <Bar data={data} options={options} />
     </div>
   );
 };

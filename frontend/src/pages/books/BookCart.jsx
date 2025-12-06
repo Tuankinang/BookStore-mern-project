@@ -1,14 +1,23 @@
 import React from "react";
 import { FiShoppingCart } from "react-icons/fi";
 import { getImgUrl } from "../../utils/getImgUrl";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/features/cart/cartSlice";
+import { useAuth } from "../../context/AuthContext";
+
 
 const BookCart = ({ book }) => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
+    if (currentUser) {
+        dispatch(addToCart(product));
+    } else {
+        alert("Vui lòng đăng nhập để mua hàng!");
+        navigate("/login");
+    }
   };
   return (
     <div className=" rounded-lg transition-shadow duration-300">

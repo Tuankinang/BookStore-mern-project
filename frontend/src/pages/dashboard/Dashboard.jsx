@@ -1,10 +1,57 @@
 import React, { useEffect, useState } from "react";
 import getBaseUrl from "../../utils/baseUrl";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loading from "../../components/Loading";
-import { MdIncompleteCircle } from "react-icons/md";
+import { MdAttachMoney, MdBarChart, MdInventory2, MdShoppingCart, MdTrendingUp } from "react-icons/md";
 import RevenueChart from "./RevenueChart";
+import { FiArrowRight, FiCheckCircle, FiPackage } from "react-icons/fi";
+import { getImgUrl } from "../../utils/getImgUrl";
+
+// Component hiển thị thẻ KPI
+const KPI = ({ icon, title, value, sub }) => (
+  <div className="flex items-center p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+    <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 mr-4">
+      {icon}
+    </div>
+    <div>
+      <div className="text-sm text-gray-500 font-medium">{title}</div>
+      <div className="text-2xl font-bold text-gray-900">{value}</div>
+      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+    </div>
+  </div>
+);
+
+// Component hiển thị từng sản phẩm (Đã chỉnh sửa để nhận dữ liệu thật)
+const ProductItem = ({ p, index }) => (
+  <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
+    {/* Số thứ tự Top */}
+    <div className="text-lg font-bold text-gray-300 w-4">#{index + 1}</div>
+    
+    {/* Ảnh */}
+    <div className="w-12 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 shadow-sm">
+      <img 
+        src={getImgUrl(p?.coverImage)} 
+        alt={p?.title} 
+        className="object-cover w-full h-full" 
+        onError={(e) => {e.target.src = "https://placehold.co/100"}} // Fallback image
+      />
+    </div>
+    
+    {/* Thông tin */}
+    <div className="flex-1">
+      <h4 className="text-sm font-semibold text-gray-800 line-clamp-1" title={p?.title}>{p?.title}</h4>
+      <div className="flex items-center gap-3 mt-1">
+        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">Kho: {p?.stock}</span>
+        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Đã bán: {p?.sold || 0}</span>
+      </div>
+    </div>
+    
+    {/* Giá */}
+    <div className="text-sm font-bold text-indigo-600">${p?.newPrice}</div>
+  </div>
+);
+
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -29,280 +76,126 @@ const Dashboard = () => {
     fetchData();
   }, []);
   if (loading) return <Loading />;
+
+  const topProducts = data?.trendingBooksList || [];
+
   return (
-    <>
-      <section className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-purple-600 bg-purple-100 rounded-full mr-6">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
-            </svg>
+    <div className="pb-10">
+      {/* --- PHẦN 1: KPI CARDS --- */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <KPI
+            icon={<MdInventory2 size={24} />} 
+            title="Sản phẩm" 
+            value={data?.totalBooks} 
+            sub="Đầu sách đang quản lý" 
+        />
+        <KPI 
+            icon={<MdAttachMoney size={24} />} 
+            title="Tổng doanh thu" 
+            value={`$${data?.totalSales}`} 
+            sub="Doanh thu thực tế (Đã giao)" 
+        />
+        <KPI 
+            icon={<MdTrendingUp size={24} />} 
+            title="Sách đã bán" 
+            value={data?.totalBooksSold} 
+            sub={`Tồn kho: ${data?.totalBooksStock}`} 
+        />
+        <Link to="/dashboard/manage-orders">
+            <KPI 
+              icon={<MdShoppingCart size={24} />} 
+              title="Tổng đơn hàng" 
+              value={data?.totalOrders} 
+              sub="Nhấn để quản lý đơn hàng"
+            />
+        </Link>
+      </section>
+
+      {/* --- PHẦN 2: BIỂU ĐỒ & TOP SẢN PHẨM --- */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* CỘT TRÁI (2/3): Biểu đồ doanh thu */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-lg font-bold text-gray-800">Doanh thu theo tháng</h3>
+              <p className="text-sm text-gray-400">Thống kê đơn hàng đã hoàn thành</p>
+            </div>
+            <div className="p-2 bg-gray-50 rounded-lg">
+                <MdBarChart className="text-gray-400 text-xl" />
+            </div>
           </div>
-          <div>
-            <span className="block text-2xl font-bold">{data?.totalBooks}</span>
-            <span className="block text-gray-500">Sản Phẩm</span>
-          </div>
-        </div>
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-green-600 bg-green-100 rounded-full mr-6">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-              />
-            </svg>
-          </div>
-          <div>
-            <span className="block text-2xl font-bold">
-              ${data?.totalSales}
-            </span>
-            <span className="block text-gray-500">Tổng doanh thu</span>
-          </div>
-        </div>
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-red-600 bg-red-100 rounded-full mr-6">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-              />
-            </svg>
-          </div>
-          <div>
-            <span className="inline-block text-2xl font-bold">
-              {data?.trendingBooks}
-            </span>
-            <span className="inline-block text-xl text-gray-500 font-semibold">
-              (13%)
-            </span>
-            <span className="block text-gray-500">
-              Sách thịnh hành trong tháng này
-            </span>
+          <div className="w-full h-[400px]">
+            <RevenueChart />
           </div>
         </div>
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-blue-600 bg-blue-100 rounded-full mr-6">
-            <MdIncompleteCircle className="size-6" />
+
+        {/* CỘT PHẢI (1/3): Top 5 Sản phẩm bán chạy (ĐÃ SỬA) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+                <h4 className="text-lg font-bold text-gray-800">Top Bán Chạy</h4>
+                <div className="text-xs text-gray-400">5 sản phẩm doanh số cao nhất</div>
+            </div>
+            <Link to="/dashboard/manage-books" className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors">
+                <FiArrowRight size={20} />
+            </Link>
           </div>
-          <div>
-            <span className="block text-2xl font-bold">
-              {data?.totalOrders}
-            </span>
-            <span className="block text-gray-500">Tổng số đơn đặt hàng</span>
+
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            {topProducts.length > 0 ? (
+                <div className="space-y-1">
+                    {topProducts.map((book, index) => (
+                        <ProductItem key={book._id} p={book} index={index} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center text-gray-400 py-10">Chưa có dữ liệu bán hàng</div>
+            )}
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-gray-100">
+             <button 
+                onClick={() => navigate("/dashboard/manage-books")}
+                className="w-full py-2.5 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-xl transition-colors"
+             >
+                Xem tất cả sách
+             </button>
           </div>
         </div>
       </section>
-      <section className="grid md:grid-cols-2 xl:grid-cols-4 xl:grid-rows-3 xl:grid-flow-col gap-6">
-        <div className="flex flex-col md:col-span-2 md:row-span-2 bg-white shadow rounded-lg">
-          <div className="px-6 py-5 font-semibold border-b border-gray-100">
-            Số lượng đơn hàng mỗi tháng
-          </div>
-          <div className="p-4 flex-grow">
-            <div className="flex items-center justify-center h-full px-4 py-16 text-gray-400 text-3xl font-semibold bg-gray-100 border-2 border-gray-200 border-dashed rounded-md">
-              <RevenueChart />
+
+      {/* --- PHẦN 3: INSIGHTS (Thống kê phụ) --- */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-green-50 text-green-600 rounded-full">
+                <FiCheckCircle size={24}/>
             </div>
-          </div>
-        </div>
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-yellow-600 bg-yellow-100 rounded-full mr-6">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path fill="#fff" d="M12 14l9-5-9-5-9 5 9 5z" />
-              <path
-                fill="#fff"
-                d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
-              />
-            </svg>
-          </div>
-          <div>
-            <span className="block text-2xl font-bold">02</span>
-            <span className="block text-gray-500">Đơn hàng còn lại</span>
-          </div>
-        </div>
-        <div className="flex items-center p-8 bg-white shadow rounded-lg">
-          <div className="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-teal-600 bg-teal-100 rounded-full mr-6">
-            <svg
-              aria-hidden="true"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              className="h-6 w-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div>
-            <span className="block text-2xl font-bold">139</span>
-            <span className="block text-gray-500">
-              Lượt truy cập trang web (ngày cuối cùng)
-            </span>
-          </div>
-        </div>
-        <div className="row-span-3 bg-white shadow rounded-lg">
-          <div className="flex items-center justify-between px-6 py-5 font-semibold border-b border-gray-100">
-            <span>Người dùng theo đơn đặt hàng trung bình</span>
-            <button
-              type="button"
-              className="inline-flex justify-center rounded-md px-1 -mr-1 bg-white text-sm leading-5 font-medium text-gray-500 hover:text-gray-600"
-              id="options-menu"
-              aria-haspopup="true"
-              aria-expanded="true"
-            >
-              Giảm dần
-              <svg
-                className="-mr-1 ml-1 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </div>
-          <div className="overflow-y-auto" style={{ maxHeight: "24rem" }}>
-            <ul className="p-6 space-y-6">
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/women/82.jpg"
-                    alt="Annette Watson profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Annette Watson</span>
-                <span className="ml-auto font-semibold">9.3</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/81.jpg"
-                    alt="Calvin Steward profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Calvin Steward</span>
-                <span className="ml-auto font-semibold">8.9</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/80.jpg"
-                    alt="Ralph Richards profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Ralph Richards</span>
-                <span className="ml-auto font-semibold">8.7</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/79.jpg"
-                    alt="Bernard Murphy profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Bernard Murphy</span>
-                <span className="ml-auto font-semibold">8.2</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/women/78.jpg"
-                    alt="Arlene Robertson profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Arlene Robertson</span>
-                <span className="ml-auto font-semibold">8.2</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/women/77.jpg"
-                    alt="Jane Lane profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Jane Lane</span>
-                <span className="ml-auto font-semibold">8.1</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/76.jpg"
-                    alt="Pat Mckinney profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Pat Mckinney</span>
-                <span className="ml-auto font-semibold">7.9</span>
-              </li>
-              <li className="flex items-center">
-                <div className="h-10 w-10 mr-3 bg-gray-100 rounded-full overflow-hidden">
-                  <img
-                    src="https://randomuser.me/api/portraits/men/75.jpg"
-                    alt="Norman Walters profile picture"
-                  />
-                </div>
-                <span className="text-gray-600">Norman Walters</span>
-                <span className="ml-auto font-semibold">7.7</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="flex flex-col row-span-3 bg-white shadow rounded-lg">
-          <div className="px-6 py-5 font-semibold border-b border-gray-100">
-            Sinh viên theo loại hình học tập
-          </div>
-          <div className="p-4 flex-grow">
-            <div className="flex items-center justify-center h-full px-4 py-24 text-gray-400 text-3xl font-semibold bg-gray-100 border-2 border-gray-200 border-dashed rounded-md">
-              Chart
+            <div>
+                <p className="text-sm text-gray-500">Đơn thành công</p>
+                <p className="text-lg font-bold text-gray-800">{data?.totalOrders}</p>
             </div>
-          </div>
+        </div>
+        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-yellow-50 text-yellow-600 rounded-full">
+                <FiPackage size={24}/>
+            </div>
+            <div>
+                <p className="text-sm text-gray-500">Tổng tồn kho</p>
+                <p className="text-lg font-bold text-gray-800">{data?.totalBooksStock}</p>
+            </div>
+        </div>
+        <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-full">
+                <MdBarChart size={24}/>
+            </div>
+            <div>
+                <p className="text-sm text-gray-500">Tăng trưởng</p>
+                <p className="text-lg font-bold text-gray-800">+12.5% <span className="text-xs font-normal text-gray-400">(tháng này)</span></p>
+            </div>
         </div>
       </section>
-    </>
+    </div>
   );
 };
 

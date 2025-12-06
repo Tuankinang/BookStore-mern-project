@@ -11,6 +11,7 @@ import Loading from "../../../components/Loading";
 import Swal from "sweetalert2";
 import axios from "axios";
 import getBaseUrl from "../../../utils/baseURL";
+import { useState } from "react";
 
 const UpdateBook = () => {
   const { id } = useParams();
@@ -23,6 +24,7 @@ const UpdateBook = () => {
   // console.log(bookData)
   const [updateBook] = useUpdateBookMutation();
   const { register, handleSubmit, setValue, reset } = useForm();
+  const [imageFileName, setimageFileName] = useState("");
   useEffect(() => {
     if (bookData) {
       setValue("title", bookData.title);
@@ -32,6 +34,8 @@ const UpdateBook = () => {
       setValue("oldPrice", bookData.oldPrice);
       setValue("newPrice", bookData.newPrice);
       setValue("coverImage", bookData.coverImage);
+      setValue("stock", bookData.stock);
+      setimageFileName(bookData.coverImage);
     }
   }, [bookData, setValue]);
 
@@ -42,8 +46,9 @@ const UpdateBook = () => {
       category: data.category,
       trending: data.trending,
       oldPrice: Number(data.oldPrice),
-      newPrice: Number(data.newPrice),
-      coverImage: data.coverImage || bookData.coverImage,
+      newPrice: Number(data.newPrice),    
+      stock: Number(data.stock),
+      coverImage: imageFileName || bookData.coverImage,
     };
     try {
       await axios.put(`${getBaseUrl()}/api/books/edit/${id}`, updateBookData, {
@@ -67,22 +72,30 @@ const UpdateBook = () => {
       alert("Không cập nhật được sách.");
     }
   };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setimageFileName(file.name);
+    }
+  };
+
   if (isLoading) return <Loading />;
   if (isError) return <div>Lỗi khi tìm dữ liệu sách</div>;
   return (
     <div className="max-w-lg mx-auto md:p-6 p-3 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Update Book</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Cập nhật sách</h2>
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <InputField
-          label="Title"
+          label="Tên sách"
           name="title"
           placeholder="Enter book title"
           register={register}
         />
 
         <InputField
-          label="Description"
+          label="Mô tả"
           name="description"
           placeholder="Enter book description"
           type="textarea"
@@ -90,7 +103,7 @@ const UpdateBook = () => {
         />
 
         <SelectField
-          label="Category"
+          label="Thể loại"
           name="category"
           options={[
             { value: "", label: "Choose A Category" },
@@ -116,7 +129,7 @@ const UpdateBook = () => {
         </div>
 
         <InputField
-          label="Old Price"
+          label="Giá cũ"
           name="oldPrice"
           type="number"
           placeholder="Old Price"
@@ -124,7 +137,7 @@ const UpdateBook = () => {
         />
 
         <InputField
-          label="New Price"
+          label="Giá khuyến mãi"
           name="newPrice"
           type="number"
           placeholder="New Price"
@@ -132,12 +145,27 @@ const UpdateBook = () => {
         />
 
         <InputField
-          label="Cover Image URL"
-          name="coverImage"
-          type="text"
-          placeholder="Cover Image URL"
+          label="Số lượng tồn kho"
+          name="stock"
+          type="number"
+          placeholder="Nhập số lượng"
           register={register}
         />
+
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Hình ảnh
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="mb-2 w-full"
+          />
+          {imageFileName && (
+            <p className="text-sm text-gray-500">Đang chọn: {imageFileName}</p>
+          )}
+        </div>
 
         <button
           type="submit"

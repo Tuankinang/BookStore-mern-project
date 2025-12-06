@@ -51,26 +51,25 @@ const AddBook = () => {
     <div className="max-w-lg   mx-auto md:p-6 p-3 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Thêm sách mới</h2>
 
-      {/* Form starts here */}
       <form onSubmit={handleSubmit(onSubmit)} className="">
-        {/* Reusable Input Field for Title */}
+        {/* Tên sách */}
         <InputField
           label="Tên sách"
           name="title"
-          placeholder="Enter book title"
+          placeholder="Nhập tên sách"
           register={register}
         />
 
-        {/* Reusable Textarea for Description */}
+        {/* Mô tả */}
         <InputField
           label="Mô tả"
           name="description"
-          placeholder="Enter book description"
+          placeholder="Mô tả"
           type="textarea"
           register={register}
         />
 
-        {/* Reusable Select Field for Category */}
+        {/* Thể loại sách */}
         <SelectField
           label="Loại sách"
           name="category"
@@ -81,12 +80,10 @@ const AddBook = () => {
             { value: "fiction", label: "Fiction" },
             { value: "horror", label: "Horror" },
             { value: "adventure", label: "Adventure" },
-            // Add more options as needed
           ]}
           register={register}
         />
 
-        {/* Trending Checkbox */}
         <div className="mb-4">
           <label className="inline-flex items-center">
             <input
@@ -100,25 +97,34 @@ const AddBook = () => {
           </label>
         </div>
 
-        {/* Old Price */}
+        {/* Giá cũ */}
         <InputField
           label="Giá"
           name="oldPrice"
           type="number"
-          placeholder="Old Price"
+          placeholder="Giá cũ"
           register={register}
         />
 
-        {/* New Price */}
+        {/* Giá khuyến mãi */}
         <InputField
           label="Giá khuyến mãi"
           name="newPrice"
           type="number"
-          placeholder="New Price"
+          placeholder="Giá khuyến mãi"
           register={register}
         />
 
-        {/* Cover Image Upload */}
+        {/* SỐ LƯỢNG */}
+        <InputField
+          label="Số lượng"
+          name="stock"
+          type="number"
+          placeholder="Nhập số lượng sách"
+          register={register}
+        />
+
+        {/* Hình ảnh */}
         <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Ảnh

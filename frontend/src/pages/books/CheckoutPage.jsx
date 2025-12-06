@@ -5,17 +5,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import { useCreateOrderMutation } from "../../redux/features/orders/ordersApi";
+import { FiCreditCard, FiMail, FiMapPin, FiPhone, FiTruck, FiUser } from "react-icons/fi";
+import { getImgUrl } from "../../utils/getImgUrl";
 
 const CheckoutPage = () => {
   const cartItems = useSelector((state) => state.cart.cartItems);
   const totalPrice = cartItems
-    .reduce((acc, item) => acc + item.newPrice, 0)
+    .reduce((acc, item) => acc + item.newPrice * item.quantity, 0)
     .toFixed(2);
   const { currentUser } = useAuth();
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm();
 
@@ -33,7 +34,10 @@ const CheckoutPage = () => {
         zipcode: data.zipcode,
       },
       phone: data.phone,
-      productIds: cartItems.map((item) => item?._id),
+      productIds: cartItems.map(item => ({
+                productId: item?._id,
+                quantity: item?.quantity
+      })),
       totalPrice: totalPrice,
     };
     try {
@@ -52,234 +56,221 @@ const CheckoutPage = () => {
     }
   };
   const [isChecked, setIsChecked] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cod');
   if (isLoading) return <div>Đang tải....</div>;
   return (
-    <section>
-      <div className="min-h-screen p-6 bg-gray-100 flex items-center justify-center">
-        <div className="container max-w-screen-lg mx-auto">
-          <div>
-            <div>
-              <h2 className="font-semibold text-xl text-gray-600 mb-2">
-                Cash On Delevary
+    <section className="bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center sm:text-left">Thanh toán</h1>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
+          {/* --- CỘT TRÁI: THÔNG TIN & THANH TOÁN (8 phần) --- */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* 1. Thông tin giao hàng */}
+            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                 <FiMapPin className="text-indigo-600"/> Địa chỉ giao hàng
               </h2>
-              <p className="text-gray-500 mb-2">Total Price: ${totalPrice}</p>
-              <p className="text-gray-500 mb-6">
-                Items:{cartItems.length > 0 ? cartItems.length : 0}
-              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 {/* Họ tên */}
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><FiUser/></div>
+                        <input
+                            type="text"
+                            className="pl-10 w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            placeholder="Nhập họ tên"
+                            {...register("name", { required: true })}
+                        />
+                    </div>
+                 </div>
+
+                 {/* Phone */}
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><FiPhone/></div>
+                        <input
+                            type="number"
+                            className="pl-10 w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            placeholder="Nhập số điện thoại"
+                            {...register("phone", { required: true })}
+                        />
+                    </div>
+                 </div>
+
+                 {/* Email (Readonly) */}
+                 <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><FiMail/></div>
+                        <input
+                            type="text"
+                            className="pl-10 w-full border border-gray-300 rounded-lg h-10 px-3 bg-gray-100 text-gray-500 cursor-not-allowed"
+                            defaultValue={currentUser?.email}
+                            disabled
+                        />
+                    </div>
+                 </div>
+
+                 {/* Địa chỉ chi tiết */}
+                 <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ (Số nhà, đường)</label>
+                    <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                        placeholder="Ví dụ: 123 Đường Nguyễn Văn Linh"
+                        {...register("address", { required: true })}
+                    />
+                 </div>
+
+                 {/* Thành phố & Bang */}
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Thành phố</label>
+                    <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        {...register("city", { required: true })}
+                    />
+                 </div>
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quận / Huyện</label>
+                    <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        {...register("state", { required: true })}
+                    />
+                 </div>
+
+                 {/* Quốc gia & Zip */}
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Quốc gia</label>
+                    <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="Vietnam"
+                        {...register("country", { required: true })}
+                    />
+                 </div>
+                 <div className="md:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Mã bưu điện (Zipcode)</label>
+                    <input
+                        type="text"
+                        className="w-full border border-gray-300 rounded-lg h-10 px-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        {...register("zipcode", { required: true })}
+                    />
+                 </div>
+              </div>
             </div>
-            {cartItems.length > 0 && (
-              <div className="bg-white rounded shadow-lg p-4 px-4 md:p-8 mb-6">
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  className="grid gap-4 gap-y-2 text-sm grid-cols-1 lg:grid-cols-3 my-8"
-                >
-                  <div className="text-gray-600">
-                    <p className="font-medium text-lg">Personal Details</p>
-                    <p>Please fill out all the fields.</p>
-                  </div>
 
-                  <div className="lg:col-span-2">
-                    <div className="grid gap-4 gap-y-2 text-sm grid-cols-1 md:grid-cols-5">
-                      <div className="md:col-span-5">
-                        <label htmlFor="full_name">Full Name</label>
-                        <input
-                          type="text"
-                          name="name"
-                          id="name"
-                          className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          {...register("name", { required: true })}
-                        />
-                      </div>
-
-                      <div className="md:col-span-5">
-                        <label html="email">Email Address</label>
-                        <input
-                          type="text"
-                          name="email"
-                          id="email"
-                          className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          disabled
-                          defaultValue={currentUser?.email}
-                          placeholder="email@domain.com"
-                        />
-                      </div>
-                      <div className="md:col-span-5">
-                        <label html="phone">Phone Number</label>
-                        <input
-                          type="number"
-                          name="phone"
-                          id="phone"
-                          className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          {...register("phone", { required: true })}
-                          placeholder="+123 456 7890"
-                        />
-                      </div>
-
-                      <div className="md:col-span-3">
-                        <label htmlFor="address">Address / Street</label>
-                        <input
-                          type="text"
-                          name="address"
-                          id="address"
-                          className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          {...register("address", { required: true })}
-                          placeholder=""
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label htmlFor="city">City</label>
-                        <input
-                          type="text"
-                          name="city"
-                          id="city"
-                          className="h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          {...register("city", { required: true })}
-                          placeholder=""
-                        />
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label htmlFor="country">Country / region</label>
-                        <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                          <input
-                            name="country"
-                            id="country"
-                            placeholder="Country"
-                            className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                            {...register("country", { required: true })}
-                          />
-                          <button
-                            tabIndex="-1"
-                            className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600"
-                          >
-                            <svg
-                              className="w-4 h-4 mx-2 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                          <button
-                            tabIndex="-1"
-                            className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                          >
-                            <svg
-                              className="w-4 h-4 mx-2 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="18 15 12 9 6 15"></polyline>
-                            </svg>
-                          </button>
+            {/* 2. Phương thức thanh toán (MỚI) */}
+            <div className="bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                    <FiCreditCard className="text-indigo-600"/> Phương thức thanh toán
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Option 1: COD */}
+                    <div 
+                        onClick={() => setPaymentMethod('cod')}
+                        className={`cursor-pointer border rounded-lg p-4 flex items-center gap-4 transition-all ${paymentMethod === 'cod' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-gray-200 hover:border-indigo-300'}`}
+                    >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${paymentMethod === 'cod' ? 'border-indigo-600' : 'border-gray-400'}`}>
+                            {paymentMethod === 'cod' && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>}
                         </div>
-                      </div>
-
-                      <div className="md:col-span-2">
-                        <label htmlFor="state">State / province</label>
-                        <div className="h-10 bg-gray-50 flex border border-gray-200 rounded items-center mt-1">
-                          <input
-                            name="state"
-                            id="state"
-                            placeholder="State"
-                            className="px-4 appearance-none outline-none text-gray-800 w-full bg-transparent"
-                            {...register("state", { required: true })}
-                          />
-                          <button className="cursor-pointer outline-none focus:outline-none transition-all text-gray-300 hover:text-red-600">
-                            <svg
-                              className="w-4 h-4 mx-2 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                          <button
-                            tabIndex="-1"
-                            className="cursor-pointer outline-none focus:outline-none border-l border-gray-200 transition-all text-gray-300 hover:text-blue-600"
-                          >
-                            <svg
-                              className="w-4 h-4 mx-2 fill-current"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <polyline points="18 15 12 9 6 15"></polyline>
-                            </svg>
-                          </button>
+                        <div>
+                            <p className="font-semibold text-gray-800 flex items-center gap-2"><FiTruck/> Thanh toán khi nhận hàng (COD)</p>
+                            <p className="text-xs text-gray-500">Thanh toán tiền mặt cho shipper khi nhận được hàng.</p>
                         </div>
-                      </div>
+                    </div>
 
-                      <div className="md:col-span-1">
-                        <label htmlFor="zipcode">Zipcode</label>
+                    {/* Option 2: Online */}
+                    <div 
+                        onClick={() => setPaymentMethod('online')}
+                        className={`cursor-pointer border rounded-lg p-4 flex items-center gap-4 transition-all ${paymentMethod === 'online' ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-gray-200 hover:border-indigo-300'}`}
+                    >
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${paymentMethod === 'online' ? 'border-indigo-600' : 'border-gray-400'}`}>
+                             {paymentMethod === 'online' && <div className="w-2.5 h-2.5 bg-indigo-600 rounded-full"></div>}
+                        </div>
+                        <div>
+                            <p className="font-semibold text-gray-800 flex items-center gap-2"><FiCreditCard/> Thanh toán Online</p>
+                            <p className="text-xs text-gray-500">Thẻ ngân hàng, Ví điện tử (Momo, ZaloPay...)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+          </div>
+
+          {/* --- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG (4 phần) --- */}
+          <div className="lg:col-span-4">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 sticky top-6">
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Đơn hàng của bạn</h2>
+                
+                {/* List sản phẩm */}
+                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 mb-6 custom-scrollbar">
+                    {cartItems.map((item) => (
+                        <div key={item._id} className="flex gap-4">
+                            <div className="h-16 w-12 flex-shrink-0 overflow-hidden rounded border border-gray-200">
+                                <img src={getImgUrl(item.coverImage)} alt={item.title} className="h-full w-full object-cover"/>
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{item.title}</h3>
+                                <p className="text-xs text-gray-500 mt-1">Số lượng: {item.quantity}</p>
+                            </div>
+                            <p className="text-sm font-semibold text-gray-900">${(item.newPrice * item.quantity).toFixed(2)}</p>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 space-y-2">
+                    <div className="flex justify-between text-sm text-gray-600">
+                        <span>Tạm tính</span>
+                        <span>${totalPrice}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-600">
+                        <span>Phí vận chuyển</span>
+                        <span className="text-green-600 font-medium">Miễn phí</span>
+                    </div>
+                    <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-100 mt-2">
+                        <span>Tổng cộng</span>
+                        <span className="text-indigo-600">${totalPrice}</span>
+                    </div>
+                </div>
+
+                {/* Điều khoản */}
+                <div className="mt-6">
+                    <label className="flex items-start gap-2 cursor-pointer">
                         <input
-                          type="text"
-                          name="zipcode"
-                          id="zipcode"
-                          className="transition-all flex items-center h-10 border mt-1 rounded px-4 w-full bg-gray-50"
-                          {...register("zipcode", { required: true })}
-                          placeholder=""
-                        />
-                      </div>
-
-                      <div className="md:col-span-5 mt-3">
-                        <div className="inline-flex items-center">
-                          <input
                             type="checkbox"
-                            name="billing_same"
-                            id="billing_same"
-                            className="form-checkbox"
+                            className="mt-1 w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                             checked={isChecked}
                             onChange={() => setIsChecked(!isChecked)}
-                          />
-                          <label htmlFor="billing_same" className="ml-2 ">
-                            I am aggree to the{" "}
-                            <Link className="underline underline-offset-2 text-blue-600">
-                              Terms & Conditions
-                            </Link>{" "}
-                            and{" "}
-                            <Link className="underline underline-offset-2 text-blue-600">
-                              Shoping Policy.
-                            </Link>
-                          </label>
-                        </div>
-                      </div>
+                        />
+                        <span className="text-xs text-gray-500">
+                            Tôi đồng ý với <Link className="text-indigo-600 underline">Điều khoản dịch vụ</Link> và <Link className="text-indigo-600 underline">Chính sách bảo mật</Link>.
+                        </span>
+                    </label>
+                </div>
 
-                      <div className="md:col-span-5 text-right">
-                        <div className="inline-flex items-end">
-                          <button
-                            disabled={!isChecked}
-                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                          >
-                            Place an Order
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            )}
+                {/* Nút Đặt hàng */}
+                <button
+                    disabled={!isChecked}
+                    className={`w-full mt-6 py-3 px-4 rounded-lg font-bold text-white shadow-md transition-all 
+                    ${isChecked 
+                        ? 'bg-indigo-600 hover:bg-indigo-700 transform active:scale-95' 
+                        : 'bg-gray-400 cursor-not-allowed'}`}
+                >
+                    {isLoading ? "Đang xử lý..." : "Xác nhận đặt hàng"}
+                </button>
+
+            </div>
           </div>
-        </div>
+
+        </form>
       </div>
     </section>
   );

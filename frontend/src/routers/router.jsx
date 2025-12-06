@@ -15,6 +15,8 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import ManageBooks from "../pages/dashboard/manageBooks/ManageBooks";
 import AddBook from "../pages/dashboard/addBook/AddBook";
 import UpdateBook from "../pages/dashboard/editBook/UpdateBook";
+import ManageOrders from "../pages/dashboard/manageOrders/ManageOrders";
+import ManageUsers from "../pages/dashboard/user/ManageUsers";
 
 const router = createBrowserRouter([
   // --- NHÁNH 1: CLIENT (Khách hàng) ---
@@ -98,6 +100,14 @@ const router = createBrowserRouter([
       {
         path: "manage-books",
         element: <ManageBooks />,
+      },
+      {
+        path: "manage-orders",
+        element: <ManageOrders />
+      },
+      {
+        path: "manage-users",
+        element: <ManageUsers />
       },
     ],
   },

@@ -9,12 +9,22 @@ const cartSlice = createSlice({
   name: "cart",
   initialState: initialState,
   reducers: {
+    setCart: (state, action) => {
+        state.cartItems = action.payload;
+    },
     addToCart: (state, action) => {
       const existingItem = state.cartItems.find(
         (item) => item._id === action.payload._id
       );
+      const quantityToAdd = action.payload.quantity || 1;
+      const productStock = action.payload.stock || 0; // Lấy tồn kho của sách
+
       if (!existingItem) {
-        state.cartItems.push(action.payload);
+        state.cartItems.push({ 
+            ...action.payload, 
+            quantity: quantityToAdd 
+        });
+        
         Swal.fire({
           position: "top-end",
           icon: "success",
@@ -22,16 +32,34 @@ const cartSlice = createSlice({
           showConfirmButton: false,
           timer: 1500,
         });
-      } else
+      } else {
+        existingItem.quantity += quantityToAdd; 
         Swal.fire({
-          title: "Sách đã tồn tại",
-          text: "Bạn không thể thêm vào!",
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "OK!",
+          position: "top-end",
+          icon: "success",
+          title: "Đã cập nhật số lượng!",
+          showConfirmButton: false,
+          timer: 1500,
         });
+      }
+    },
+    updateQuantity: (state, action) => {
+        const { type, _id, quantity } = action.payload; // type: 'increment' hoặc 'decrement'
+        const item = state.cartItems.find((item) => item._id === _id);
+
+        if (item) {
+            if (type === 'increment') {
+                item.quantity += 1;
+            } else if (type === 'decrement') {
+                if (item.quantity > 1) {
+                    item.quantity -= 1;
+                }
+            } else if (type === 'set') { // Xử lý nhập số trực tiếp
+                if (quantity >= 1) {
+                    item.quantity = quantity;
+                }
+            }
+        }
     },
     removeFromCart: (state, action) => {
       state.cartItems = state.cartItems.filter(
@@ -44,5 +72,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, removeFromCart, clearCart } = cartSlice.actions;
+export const { addToCart, setCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
 export default cartSlice.reducer;

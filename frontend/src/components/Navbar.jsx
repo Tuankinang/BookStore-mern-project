@@ -9,8 +9,12 @@ import {
 import { IoSearchOutline } from "react-icons/io5";
 import { HiOutlineUser } from "react-icons/hi";
 import avatarImg from "../assets/avatar.png";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useAuth } from "../context/AuthContext";
+import { clearCart, setCart } from "../redux/features/cart/cartSlice"
+import { useEffect } from "react";
+import { useFetchAllBooksQuery } from "../redux/features/books/booksApi";
+import { getImgUrl } from "../utils/getImgUrl";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard" },
@@ -22,8 +26,43 @@ const navigation = [
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const cartItems = useSelector((state) => state.cart.cartItems);
+  const dispatch = useDispatch(); 
   const { currentUser, logout } = useAuth();
+
+  // --- LOGIC TÌM KIẾM ---
+  const [searchTerm, setSearchTerm] = useState("");
+  // Lấy toàn bộ sách về để lọc (Cách đơn giản cho Client-side search)
+  const { data: books = [] } = useFetchAllBooksQuery();
+
+  // Lọc sách theo từ khóa (Không phân biệt hoa thường)
+  const filteredBooks = books.filter((book) =>
+    book.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  // ----------------------
+
+  const token = localStorage.getItem('token');
+  const isAdmin = !!token;
+
+  useEffect(() => {
+    if (currentUser) {
+      const savedCart = localStorage.getItem(`cart_${currentUser.email}`);
+      if (savedCart) {
+        dispatch(setCart(JSON.parse(savedCart)));
+      }
+    }
+  }, [currentUser, dispatch]);
+
+  useEffect(() => {
+    if (currentUser) {
+      const timeoutId = setTimeout(() => {
+        localStorage.setItem(`cart_${currentUser.email}`, JSON.stringify(cartItems));
+      }, 500);
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [cartItems, currentUser]);
   const handleLogOut = () => {
+    dispatch(clearCart());
     logout();
   };
 
@@ -40,9 +79,43 @@ const Navbar = () => {
             <IoSearchOutline className="absolute inline-block left-3 inset-y-2" />
             <input
               type="text"
-              placeholder="Search here"
+              placeholder="Tìm kiếm sách"
               className="bg-[#EAEAEA] w-full py-1 md:px-8 px-6 rounded-md focus:outline-none"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}             
             />
+            {searchTerm.length > 0 && (
+              <div className="absolute left-0 right-0 bg-white shadow-xl z-50 mt-1 rounded-md max-h-96 overflow-y-auto border border-gray-100">
+                {filteredBooks.length > 0 ? (
+                  filteredBooks.map((book) => (
+                    <Link
+                      key={book._id}
+                      to={`/books/${book._id}`}
+                      onClick={() => setSearchTerm("")} // Bấm vào thì đóng search, xóa từ khóa
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b last:border-none"
+                    >
+                      <img 
+                        src={getImgUrl(book.coverImage)} 
+                        alt={book.title} 
+                        className="w-10 h-14 object-cover rounded shadow-sm"
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-sm text-gray-800 line-clamp-1">
+                          {book.title}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {book.category} - <span className="text-red-500 font-medium">${book.newPrice}</span>
+                        </span>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="p-3 text-center text-sm text-gray-500">
+                    Không tìm thấy sách nào!
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

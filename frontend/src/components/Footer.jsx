@@ -36,17 +36,16 @@ const Footer = () => {
         {/*Right side - Newsletter*/}
         <div className="md:w-1/2 w-full">
           <p className="mb-4">
-            Subscribe to our newsletter to recevie the latest updates, news, and
-            offers!
+            Đăng ký nhận bản tin của chúng tôi để nhận những cập nhật, tin tức và ưu đãi mới nhất!
           </p>
           <div className="flex">
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="Nhập email"
               className="w-full px-4 py-2 rounded-1-md text-black"
             />
             <button className="bg-primary px-6 py-2 rounded-r-md hover:bg-primary-dark">
-              Subscribe
+              Nhận thông báo
             </button>
           </div>
         </div>

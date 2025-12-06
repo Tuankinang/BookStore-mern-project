@@ -4,14 +4,17 @@ const Order = require("../orders/order.model");
 const Book = require("../books/book.model");
 const router = express.Router();
 
-// Function to calculate admin stats
+// Hàm tính toán số liệu thống kê của admin
 router.get("/", async (req, res) => {
   try {
-    // 1. Total number of orders
+    // 1. Tổng số đơn hàng
     const totalOrders = await Order.countDocuments();
 
-    // 2. Total sales (sum of all totalPrice from orders)
+    // 2. Tổng doanh số (tổng giá của tất cả các đơn hàng)
     const totalSales = await Order.aggregate([
+      { 
+        $match: { status: 'completed' }
+      },
       {
         $group: {
           _id: null,
@@ -20,31 +23,38 @@ router.get("/", async (req, res) => {
       },
     ]);
 
-    // 4. Trending books statistics:
+    const trendingBooksList = await Book.find()
+        .sort({ sold: -1 })
+        .limit(5)
+        .select('title coverImage newPrice stock sold');
+
+    // 4. Thống kê sách đang thịnh hành
     const trendingBooksCount = await Book.aggregate([
-      { $match: { trending: true } }, // Match only trending books
-      { $count: "trendingBooksCount" }, // Return the count of trending books
+      { $match: { trending: true } },
+      { $count: "trendingBooksCount" }, 
     ]);
 
-    // If you want just the count as a number, you can extract it like this:
     const trendingBooks =
       trendingBooksCount.length > 0
         ? trendingBooksCount[0].trendingBooksCount
         : 0;
 
-    // 5. Total number of books
+    // 5. Tổng số sách
     const totalBooks = await Book.countDocuments();
 
-    // 6. Monthly sales (group by month and sum total sales for each month)
+    // 6. Doanh số hàng tháng (nhóm theo tháng và tổng doanh số cho mỗi tháng)
     const monthlySales = await Order.aggregate([
+      { 
+        $match: { status: 'completed' } 
+      },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, // Group by year and month
-          totalSales: { $sum: "$totalPrice" }, // Sum totalPrice for each month
-          totalOrders: { $sum: 1 }, // Count total orders for each month
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, 
+          totalSales: { $sum: "$totalPrice" }, 
+          totalOrders: { $sum: 1 }, 
         },
       },
-      { $sort: { _id: 1 } }, // Sort by month in ascending order
+      { $sort: { _id: 1 } },
     ]);
 
     // Result summary
@@ -54,6 +64,7 @@ router.get("/", async (req, res) => {
       trendingBooks,
       totalBooks,
       monthlySales,
+      trendingBooksList,
     });
   } catch (error) {
     console.error("Lỗi khi tải số liệu thống kê quản trị", error);
