@@ -10,21 +10,21 @@ const cartSlice = createSlice({
   initialState: initialState,
   reducers: {
     setCart: (state, action) => {
-        state.cartItems = action.payload;
+      state.cartItems = action.payload;
     },
     addToCart: (state, action) => {
       const existingItem = state.cartItems.find(
         (item) => item._id === action.payload._id
       );
       const quantityToAdd = action.payload.quantity || 1;
-      const productStock = action.payload.stock || 0; // Lấy tồn kho của sách
+      const productStock = action.payload.stock || 0;
 
       if (!existingItem) {
-        state.cartItems.push({ 
-            ...action.payload, 
-            quantity: quantityToAdd 
+        state.cartItems.push({
+          ...action.payload,
+          quantity: quantityToAdd,
         });
-        
+
         Swal.fire({
           position: "top-end",
           icon: "success",
@@ -33,7 +33,7 @@ const cartSlice = createSlice({
           timer: 1500,
         });
       } else {
-        existingItem.quantity += quantityToAdd; 
+        existingItem.quantity += quantityToAdd;
         Swal.fire({
           position: "top-end",
           icon: "success",
@@ -44,22 +44,22 @@ const cartSlice = createSlice({
       }
     },
     updateQuantity: (state, action) => {
-        const { type, _id, quantity } = action.payload; // type: 'increment' hoặc 'decrement'
-        const item = state.cartItems.find((item) => item._id === _id);
+      const { type, _id, quantity } = action.payload;
+      const item = state.cartItems.find((item) => item._id === _id);
 
-        if (item) {
-            if (type === 'increment') {
-                item.quantity += 1;
-            } else if (type === 'decrement') {
-                if (item.quantity > 1) {
-                    item.quantity -= 1;
-                }
-            } else if (type === 'set') { // Xử lý nhập số trực tiếp
-                if (quantity >= 1) {
-                    item.quantity = quantity;
-                }
-            }
+      if (item) {
+        if (type === "increment") {
+          item.quantity += 1;
+        } else if (type === "decrement") {
+          if (item.quantity > 1) {
+            item.quantity -= 1;
+          }
+        } else if (type === "set") {
+          if (quantity >= 1) {
+            item.quantity = quantity;
+          }
         }
+      }
     },
     removeFromCart: (state, action) => {
       state.cartItems = state.cartItems.filter(
@@ -72,5 +72,6 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, setCart, updateQuantity, removeFromCart, clearCart } = cartSlice.actions;
+export const { addToCart, setCart, updateQuantity, removeFromCart, clearCart } =
+  cartSlice.actions;
 export default cartSlice.reducer;

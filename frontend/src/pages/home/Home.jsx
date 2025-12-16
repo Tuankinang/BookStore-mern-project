@@ -7,9 +7,11 @@ const Home = () => {
   return (
     <>
       <Banner />
-      <TopSellers />
-      <Recommended />
-      <News />
+      <div className="max-w-screen-2xl mx-auto px-4 py-6">
+        <TopSellers />
+        <Recommended />
+        <News />
+      </div>
     </>
   );
 };

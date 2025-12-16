@@ -12,8 +12,8 @@ router.get("/", async (req, res) => {
 
     // 2. Tổng doanh số (tổng giá của tất cả các đơn hàng)
     const totalSales = await Order.aggregate([
-      { 
-        $match: { status: 'completed' }
+      {
+        $match: { status: "completed" },
       },
       {
         $group: {
@@ -24,14 +24,14 @@ router.get("/", async (req, res) => {
     ]);
 
     const trendingBooksList = await Book.find()
-        .sort({ sold: -1 })
-        .limit(5)
-        .select('title coverImage newPrice stock sold');
+      .sort({ sold: -1 })
+      .limit(5)
+      .select("title coverImage newPrice stock sold");
 
     // 4. Thống kê sách đang thịnh hành
     const trendingBooksCount = await Book.aggregate([
       { $match: { trending: true } },
-      { $count: "trendingBooksCount" }, 
+      { $count: "trendingBooksCount" },
     ]);
 
     const trendingBooks =
@@ -44,14 +44,14 @@ router.get("/", async (req, res) => {
 
     // 6. Doanh số hàng tháng (nhóm theo tháng và tổng doanh số cho mỗi tháng)
     const monthlySales = await Order.aggregate([
-      { 
-        $match: { status: 'completed' } 
+      {
+        $match: { status: "completed" },
       },
       {
         $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, 
-          totalSales: { $sum: "$totalPrice" }, 
-          totalOrders: { $sum: 1 }, 
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          totalSales: { $sum: "$totalPrice" },
+          totalOrders: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },

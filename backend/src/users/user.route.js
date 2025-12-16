@@ -1,5 +1,6 @@
 const express = require("express");
 const User = require("./user.model");
+const bcrypt = require("bcrypt");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const Order = require("../orders/order.model");
@@ -7,30 +8,27 @@ const JWT_SECRET = process.env.JWT_SECRET_KEY;
 
 // 1. ĐĂNG KÝ USER (Mặc định role là "user")
 router.post("/register", async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({ message: "User đã tồn tại" });
-        }
-
-        const newUser = new User({
-            username, 
-            email,    
-            password,
-            role: "user" // <--- Dòng này quyết định đây là tài khoản thường
-        });
-
-        await newUser.save();
-        res.status(201).json({ message: "Đăng ký thành công", user: newUser });
-    } catch (error) {
-        console.error("Lỗi khi đăng ký user", error);
-        res.status(500).json({ message: "Lỗi server khi đăng ký" });
+  try {
+    const { username, email, password } = req.body;
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: "User đã tồn tại" });
     }
+    const newUser = new User({
+      username,
+      email,
+      password,
+      role: "user",
+    });
+    await newUser.save();
+    res.status(201).json({ message: "Đăng ký thành công", user: newUser });
+  } catch (error) {
+    console.error("Lỗi khi đăng ký user", error);
+    res.status(500).json({ message: "Lỗi server khi đăng ký" });
+  }
 });
 
-// --- API ĐĂNG NHẬP ADMIN ---
+// 2. API ĐĂNG NHẬP ADMIN ---
 router.post("/admin", async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -38,7 +36,8 @@ router.post("/admin", async (req, res) => {
     if (!admin) {
       res.status(404).send({ message: "Không tìm thấy Admin!" });
     }
-    if (admin.password !== password) {
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
       return res.status(401).send({ message: "Mật khẩu không hợp lệ!" });
     }
     const token = jwt.sign(
@@ -49,9 +48,13 @@ router.post("/admin", async (req, res) => {
     return res.status(200).json({
       message: "Xác thực thành công",
       token: token,
-      username: {
+      user: {
+        _id: admin._id,
         username: admin.username,
+        email: admin.email,
         role: admin.role,
+        phone: admin.phone,
+        photoURL: admin.photoURL,
       },
     });
   } catch (error) {
@@ -67,10 +70,16 @@ router.get("/", async (req, res) => {
     const usersWithOrderInfo = await Promise.all(
       users.map(async (user) => {
         try {
-            const orderCount = await Order.countDocuments({ email: user.username });
-            return { ...user.toObject(), hasOrders: orderCount > 0, totalOrders: orderCount };
+          const orderCount = await Order.countDocuments({
+            email: user.username,
+          });
+          return {
+            ...user.toObject(),
+            hasOrders: orderCount > 0,
+            totalOrders: orderCount,
+          };
         } catch (err) {
-            return { ...user.toObject(), hasOrders: false, totalOrders: 0 };
+          return { ...user.toObject(), hasOrders: false, totalOrders: 0 };
         }
       })
     );
@@ -92,6 +101,44 @@ router.delete("/:id", async (req, res) => {
     res.status(200).json({ message: "Đã xóa thành công" });
   } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
+  }
+});
+
+// 5. CẬP NHẬT PROFILE
+router.put("/profile/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { phone, photoURL, oldPassword, newPassword } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: "Không tìm thấy User" });
+
+    // Cập nhật thông tin thường
+    if (phone) user.phone = phone;
+    if (photoURL) user.photoURL = photoURL;
+
+    // Logic đổi mật khẩu
+    if (newPassword && oldPassword) {
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res
+          .status(400)
+          .json({ message: "Mật khẩu cũ không chính xác!" });
+      }
+      user.password = newPassword; // Model sẽ tự hash lại
+    }
+
+    await user.save();
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res
+      .status(200)
+      .json({ message: "Cập nhật thành công", user: userResponse });
+  } catch (error) {
+    console.error("Lỗi update profile:", error);
+    res.status(500).json({ message: "Lỗi server: " + error.message });
   }
 });
 

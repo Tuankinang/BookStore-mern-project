@@ -9,7 +9,6 @@ import SingleBook from "../pages/books/SingleBook";
 import PrivateRoute from "./PrivateRoute";
 import OrderPage from "../pages/books/OrderPage";
 import AdminRoute from "./AdminRoute";
-import AdminLogin from "../components/AdminLogin";
 import DashboardLayout from "../pages/dashboard/DashboardLayout";
 import Dashboard from "../pages/dashboard/Dashboard";
 import ManageBooks from "../pages/dashboard/manageBooks/ManageBooks";
@@ -17,10 +16,10 @@ import AddBook from "../pages/dashboard/addBook/AddBook";
 import UpdateBook from "../pages/dashboard/editBook/UpdateBook";
 import ManageOrders from "../pages/dashboard/manageOrders/ManageOrders";
 import ManageUsers from "../pages/dashboard/user/ManageUsers";
+import UserProfile from "../pages/users/UserProfile";
 
 const router = createBrowserRouter([
   // --- NHÁNH 1: CLIENT (Khách hàng) ---
-  // Dùng App.jsx làm layout chính (chứa Navbar, Footer)
   {
     path: "/",
     element: <App />,
@@ -65,18 +64,18 @@ const router = createBrowserRouter([
         path: "/books/:id",
         element: <SingleBook />,
       },
+      {
+        path: "/user-profile",
+        element: (
+          <PrivateRoute>
+            <UserProfile />
+          </PrivateRoute>
+        ),
+      },
     ],
   },
 
-  // --- NHÁNH 2: ADMIN LOGIN (Đứng riêng) ---
-  {
-    path: "/admin",
-    element: <AdminLogin />,
-  },
-
   // --- NHÁNH 3: DASHBOARD (Quản trị) ---
-  // Nằm RIÊNG RA NGOÀI, không còn là con của App nữa.
-  // DashboardLayout sẽ tự lo phần Sidebar/Header của riêng nó.
   {
     path: "/dashboard",
     element: (
@@ -103,11 +102,11 @@ const router = createBrowserRouter([
       },
       {
         path: "manage-orders",
-        element: <ManageOrders />
+        element: <ManageOrders />,
       },
       {
         path: "manage-users",
-        element: <ManageUsers />
+        element: <ManageUsers />,
       },
     ],
   },

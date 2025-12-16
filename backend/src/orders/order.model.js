@@ -39,9 +39,9 @@ const orderSchema = mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed', 'canceled'], // Chỉ cho phép 3 trạng thái này
-      default: 'pending', // Mặc định khi tạo đơn là pending
-    }
+      enum: ["pending", "completed", "canceled"],
+      default: "pending",
+    },
   },
   {
     timestamps: true,

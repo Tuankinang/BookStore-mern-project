@@ -29,7 +29,18 @@ const RevenueChart = ({ data: monthlyData }) => {
 
   const data = {
     labels: [
-      "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ],
     datasets: [
       {
@@ -45,11 +56,11 @@ const RevenueChart = ({ data: monthlyData }) => {
 
   const options = {
     responsive: true,
-    maintainAspectRatio: false, 
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: false },
       title: {
-        display: false, 
+        display: false,
       },
       tooltip: {
         mode: "index",

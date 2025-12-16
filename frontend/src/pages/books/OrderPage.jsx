@@ -3,6 +3,7 @@ import { useDeleteOrderMutation, useGetOrderByEmailQuery, useUpdateOrderMutation
 import { useAuth } from "../../context/AuthContext";
 import { getImgUrl } from "../../utils/getImgUrl";
 import Swal from 'sweetalert2'
+import { formatPrice } from "../../utils/formatPrice";
 
 const OrderPage = () => {
   const { currentUser } = useAuth();
@@ -97,7 +98,7 @@ const OrderPage = () => {
   if (isError) return <div className="text-center py-10 text-red-500">Lỗi khi lấy dữ liệu đơn hàng!</div>;
 
   return (
-    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+    <div className="container mx-auto p-6 bg-gray-50">
       <h2 className="text-3xl font-bold mb-8 text-gray-800">Lịch sử đơn hàng của bạn</h2>
 
       {orders.length === 0 ? (
@@ -170,7 +171,7 @@ const OrderPage = () => {
                               
                               <div className="flex flex-col flex-1">
                                  <span className="font-medium text-gray-800 line-clamp-1">{item.productId.title}</span>
-                                 <span className="text-xs text-gray-500">Giá: ${item.productId.newPrice}</span>
+                                 <span className="text-xs text-gray-500">Giá: {formatPrice(item.productId.newPrice)}</span>
                                  <span className="text-xs font-bold text-indigo-600">Số lượng: x{item.quantity}</span>
                               </div>
                             </>
@@ -182,7 +183,7 @@ const OrderPage = () => {
                     </ul>
                     <div className="border-t pt-2 flex justify-between items-center">
                        <span className="font-bold text-gray-800">Tổng tiền:</span>
-                       <span className="font-bold text-xl text-red-600">${order.totalPrice}</span>
+                       <span className="font-bold text-xl text-red-600">{formatPrice(order.totalPrice)}</span>
                     </div>
                   </div>
                 </div>

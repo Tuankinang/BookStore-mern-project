@@ -1,22 +1,22 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import getBaseUrl from "../../../utils/baseUrl"; // Giả sử dùng chung file
+import getBaseUrl from "../../../utils/baseUrl";
 
 //Tạo createApi
 const ordersApi = createApi({
-  reducerPath: "ordersApi", // Tên mới cho reducer
-  tagTypes: ["Orders"], // Tag mới để quản lý cache
+  reducerPath: "ordersApi",
+  tagTypes: ["Orders"],
   baseQuery: fetchBaseQuery({
     baseUrl: `${getBaseUrl()}/api/orders`,
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('token'); // Lấy token từ bộ nhớ
+      const token = localStorage.getItem("token");
       if (token) {
-        headers.set('authorization', `Bearer ${token}`); // Gắn vào header gửi đi
+        headers.set("authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
   endpoints: (builder) => ({
-    // Lấy tất cả orders (dựa trên GET /)
+    // Lấy tất cả orders
     createOrder: builder.mutation({
       query: (newOrder) => ({
         url: "/",
@@ -33,20 +33,20 @@ const ordersApi = createApi({
       },
       providesTags: ["Orders"],
     }),
-    // Lấy TẤT CẢ đơn hàng (Admin) 
+    // Lấy TẤT CẢ đơn hàng (Admin)
     getAllOrders: builder.query({
-      query: () => "/", 
+      query: () => "/",
       providesTags: ["Orders"],
     }),
 
-    // 4. Cập nhật trạng thái đơn hàng (Admin) 
+    // 4. Cập nhật trạng thái đơn hàng (Admin)
     updateOrderStatus: builder.mutation({
       query: ({ id, status }) => ({
         url: `/${id}/status`,
         method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: ["Orders"], // Cập nhật xong tự động fetch lại list
+      invalidatesTags: ["Orders"],
     }),
 
     // 5. Xóa đơn hàng (User hủy)
@@ -55,7 +55,7 @@ const ordersApi = createApi({
         url: `/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Orders"], // Tự động load lại danh sách sau khi xóa
+      invalidatesTags: ["Orders"],
     }),
 
     // 6. Sửa thông tin đơn hàng
@@ -70,6 +70,12 @@ const ordersApi = createApi({
   }),
 });
 
-// 3. Export các hooks mới
-export const { useCreateOrderMutation, useGetOrderByEmailQuery, useGetAllOrdersQuery, useUpdateOrderStatusMutation, useDeleteOrderMutation, useUpdateOrderMutation } = ordersApi;
+export const {
+  useCreateOrderMutation,
+  useGetOrderByEmailQuery,
+  useGetAllOrdersQuery,
+  useUpdateOrderStatusMutation,
+  useDeleteOrderMutation,
+  useUpdateOrderMutation,
+} = ordersApi;
 export default ordersApi;

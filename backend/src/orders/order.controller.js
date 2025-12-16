@@ -19,8 +19,8 @@ const getOrderByEmail = async (req, res) => {
     const { email } = req.params;
     const orders = await Order.find({ email })
       .populate({
-        path: 'productIds.productId',
-        select: 'title coverImage newPrice'
+        path: "productIds.productId",
+        select: "title coverImage newPrice",
       })
       .sort({ createdAt: -1 });
     if (!orders) {
@@ -38,12 +38,14 @@ const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
       .populate({
-            path: 'productIds.productId',
-            select: 'title coverImage newPrice'
-        })
+        path: "productIds.productId",
+        select: "title coverImage newPrice",
+      })
       .sort({ createdAt: -1 });
     if (orders.length === 0) {
-      return res.status(404).json({ message: "Chưa có đơn hàng nào", orders: [] });
+      return res
+        .status(404)
+        .json({ message: "Chưa có đơn hàng nào", orders: [] });
     }
     res.status(200).json(orders);
   } catch (error) {
@@ -57,7 +59,7 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
+
     // 1. Tìm đơn hàng hiện tại trong DB
     const order = await Order.findById(id);
     if (!order) {
@@ -66,16 +68,16 @@ const updateOrderStatus = async (req, res) => {
 
     // 2. Logic quan trọng: Chỉ tăng "Đã bán" (sold) khi chuyển sang 'completed'
     // Và phải check order.status cũ != 'completed' để tránh cộng dồn nhiều lần nếu admin bấm nhầm
-    if (status === 'completed' && order.status !== 'completed') {
-        const products = order.productIds;
-        for (const item of products) {
-            await Book.findByIdAndUpdate(item.productId, {
-                $inc: {
-                  stock: -item.quantity,
-                  sold: item.quantity 
-                }
-            });
-        }
+    if (status === "completed" && order.status !== "completed") {
+      const products = order.productIds;
+      for (const item of products) {
+        await Book.findByIdAndUpdate(item.productId, {
+          $inc: {
+            stock: -item.quantity,
+            sold: item.quantity,
+          },
+        });
+      }
     }
 
     // 3. Cập nhật trạng thái mới
@@ -97,7 +99,9 @@ const deleteOrder = async (req, res) => {
     if (!deletedOrder) {
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
     }
-    res.status(200).json({ message: "Đơn hàng đã bị hủy thành công", order: deletedOrder });
+    res
+      .status(200)
+      .json({ message: "Đơn hàng đã bị hủy thành công", order: deletedOrder });
   } catch (error) {
     console.error("Lỗi khi xóa đơn hàng", error);
     res.status(500).json({ message: "Lỗi server" });
@@ -108,8 +112,10 @@ const deleteOrder = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedOrder = await Order.findByIdAndUpdate(id, req.body, { new: true });
-    
+    const updatedOrder = await Order.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+
     if (!updatedOrder) {
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
     }
@@ -126,5 +132,5 @@ module.exports = {
   getAllOrders,
   updateOrderStatus,
   deleteOrder,
-  updateOrder
+  updateOrder,
 };

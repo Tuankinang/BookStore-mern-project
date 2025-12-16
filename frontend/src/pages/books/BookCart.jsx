@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/features/cart/cartSlice";
 import { useAuth } from "../../context/AuthContext";
-
+import { formatPrice } from "../../utils/formatPrice";
 
 const BookCart = ({ book }) => {
   const { currentUser } = useAuth();
@@ -13,10 +13,10 @@ const BookCart = ({ book }) => {
   const dispatch = useDispatch();
   const handleAddToCart = (product) => {
     if (currentUser) {
-        dispatch(addToCart(product));
+      dispatch(addToCart(product));
     } else {
-        alert("Vui lòng đăng nhập để mua hàng!");
-        navigate("/login");
+      alert("Vui lòng đăng nhập để mua hàng!");
+      navigate("/login");
     }
   };
   return (
@@ -44,9 +44,9 @@ const BookCart = ({ book }) => {
               : book?.description}
           </p>
           <p className="font-medium mb-5">
-            ${book?.newPrice}{" "}
+            {formatPrice(book?.newPrice)}
             <span className="line-through font-normal ml-2">
-              ${book?.oldPrice}
+              {formatPrice(book?.oldPrice)}
             </span>
           </p>
           <button
@@ -54,7 +54,7 @@ const BookCart = ({ book }) => {
             className="btn-primary px-6 space-x-1 flex items-center gap-1 "
           >
             <FiShoppingCart className="" />
-            <span>Add to Cart</span>
+            <span>Thêm vào giỏ hàng</span>
           </button>
         </div>
       </div>

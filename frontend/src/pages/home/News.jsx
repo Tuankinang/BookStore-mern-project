@@ -13,7 +13,8 @@ import { Link } from "react-router-dom";
 const news = [
   {
     id: 1,
-    title: "Hội nghị thượng đỉnh về khí hậu toàn cầu kêu gọi hành động khẩn cấp",
+    title:
+      "Hội nghị thượng đỉnh về khí hậu toàn cầu kêu gọi hành động khẩn cấp",
     description:
       "Các nhà lãnh đạo thế giới tập trung tại Hội nghị thượng đỉnh về khí hậu toàn cầu để thảo luận về các chiến lược cấp bách nhằm chống biến đổi khí hậu, tập trung vào việc giảm phát thải carbon và thúc đẩy các giải pháp năng lượng tái tạo.",
     image: news1,
@@ -34,14 +35,16 @@ const news = [
   },
   {
     id: 4,
-    title: "Thị trường chứng khoán đạt mức cao kỷ lục trong bối cảnh kinh tế phục hồi",
+    title:
+      "Thị trường chứng khoán đạt mức cao kỷ lục trong bối cảnh kinh tế phục hồi",
     description:
       "Thị trường chứng khoán toàn cầu đã đạt mức cao kỷ lục khi những dấu hiệu phục hồi kinh tế tiếp tục xuất hiện sau những thách thức do đại dịch toàn cầu gây ra.",
     image: news4,
   },
   {
     id: 5,
-    title: "Công ty công nghệ hàng đầu ra mắt điện thoại thông minh mới sáng tạo",
+    title:
+      "Công ty công nghệ hàng đầu ra mắt điện thoại thông minh mới sáng tạo",
     description:
       "Một công ty công nghệ hàng đầu vừa cho ra mắt mẫu điện thoại thông minh mới nhất với công nghệ tiên tiến, thời lượng pin được cải thiện và thiết kế mới đẹp mắt.",
     image: news2,
@@ -51,7 +54,7 @@ const news = [
 const News = () => {
   return (
     <div className="py-16">
-      <h2 className="text-3xl font-semibold mb-6">News</h2>
+      <h2 className="text-3xl font-semibold mb-6">Tin tức mới nhất</h2>
       <Swiper
         slidesPerView={1}
         spaceBetween={30}
@@ -76,7 +79,6 @@ const News = () => {
         {news.map((item, index) => (
           <SwiperSlide key={index}>
             <div className=" flex flex-col sm:flex-row sm:justify-between items-center gap-12">
-              {/*content */}
               <div className="py-4">
                 <Link to="/">
                   <h3 className="text-lg font-medium hover:text-blue-500 mb-4">
