@@ -128,10 +128,10 @@ const AddBook = () => {
                   name="category"
                   options={[
                     { value: "", label: "Chọn thể loại" },
-                    { value: "business", label: "Business" },
-                    { value: "fiction", label: "Fiction" },
-                    { value: "horror", label: "Horror" },
-                    { value: "adventure", label: "Adventure" },
+                    { value: "Sách kinh doanh", label: "Sách kinh doanh" },
+                    { value: "Sách viễn tưởng", label: "Sách viễn tưởng" },
+                    { value: "Sách kinh dị", label: "Sách kinh dị" },
+                    { value: "Sách phiêu lưu", label: "Sách phiêu lưu" },
                   ]}
                   register={register}
                 />

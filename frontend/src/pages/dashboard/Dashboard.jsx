@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import getBaseUrl from "../../utils/baseUrl";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Loading from "../../components/Loading";
+import { Link, useNavigate } from "react-router-dom";
 import {
   MdAttachMoney,
   MdBarChart,
@@ -10,16 +8,23 @@ import {
   MdShoppingCart,
   MdTrendingUp,
 } from "react-icons/md";
-import RevenueChart from "./RevenueChart";
 import { FiArrowRight, FiCheckCircle, FiPackage } from "react-icons/fi";
+
+import getBaseUrl from "../../utils/baseUrl";
 import { getImgUrl } from "../../utils/getImgUrl";
 import { formatPrice } from "../../utils/formatPrice";
+import Loading from "../../components/Loading";
+import RevenueChart from "./RevenueChart";
 
-const KPI = ({ icon, title, value, sub }) => (
-  <div className="flex items-center p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-    <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 mr-4">
-      {icon}
-    </div>
+const KPI = ({
+  icon,
+  title,
+  value,
+  sub,
+  colorClass = "text-indigo-600 bg-indigo-50",
+}) => (
+  <div className="flex items-center p-5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+    <div className={`p-3 rounded-xl mr-4 ${colorClass}`}>{icon}</div>
     <div>
       <div className="text-sm text-gray-500 font-medium">{title}</div>
       <div className="text-2xl font-bold text-gray-900">{value}</div>
@@ -30,20 +35,28 @@ const KPI = ({ icon, title, value, sub }) => (
 
 const ProductItem = ({ p, index }) => (
   <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0">
-    <div className="text-lg font-bold text-gray-300 w-4">#{index + 1}</div>
+    <div
+      className={`text-lg font-bold w-6 text-center ${
+        index < 3 ? "text-indigo-500" : "text-gray-300"
+      }`}
+    >
+      #{index + 1}
+    </div>
 
-    <div className="w-12 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 shadow-sm">
+    {/* Ảnh sách */}
+    <div className="w-12 h-16 flex-shrink-0 rounded-md overflow-hidden border border-gray-200 shadow-sm relative">
       <img
         src={getImgUrl(p?.coverImage)}
         alt={p?.title}
         className="object-cover w-full h-full"
         onError={(e) => {
-          e.target.src = "https://placehold.co/100";
+          e.target.src = "https://placehold.co/100?text=Book";
         }}
       />
     </div>
 
-    <div className="flex-1">
+    {/* Thông tin */}
+    <div className="flex-1 min-w-0">
       <h4
         className="text-sm font-semibold text-gray-800 line-clamp-1"
         title={p?.title}
@@ -51,26 +64,28 @@ const ProductItem = ({ p, index }) => (
         {p?.title}
       </h4>
       <div className="flex items-center gap-3 mt-1">
-        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap">
           Kho: {p?.stock}
         </span>
-        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+        <span className="text-xs font-bold text-green-700 bg-green-100 px-2 py-0.5 rounded-full whitespace-nowrap">
           Đã bán: {p?.sold || 0}
         </span>
       </div>
     </div>
 
-    <div className="text-sm font-bold text-indigo-600">
+    {/* Giá tiền */}
+    <div className="text-sm font-bold text-indigo-600 whitespace-nowrap">
       {formatPrice(p?.newPrice)}
     </div>
   </div>
 );
 
+// --- Main Component ---
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({});
-  console.log(data);
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -81,19 +96,23 @@ const Dashboard = () => {
           },
         });
         setData(response.data);
-        setLoading(false);
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error fetching admin stats:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
+
   if (loading) return <Loading />;
 
+  // Dữ liệu Top 5 lấy từ backend
   const topProducts = data?.trendingBooksList || [];
 
   return (
-    <div className="pb-10">
+    <div className="pb-10 fade-in">
+      {/* 1. Phần KPI Stats */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <KPI
           icon={<MdInventory2 size={24} />}
@@ -103,26 +122,30 @@ const Dashboard = () => {
         />
         <KPI
           icon={<MdAttachMoney size={24} />}
-          title="Tổng doanh thu"
+          title="Doanh thu"
           value={`${formatPrice(data?.totalSales)}`}
-          sub="Doanh thu thực tế (Đã giao)"
+          sub="Doanh thu thực tế"
+          colorClass="text-green-600 bg-green-50"
         />
         <KPI
           icon={<MdTrendingUp size={24} />}
           title="Sách đã bán"
           value={data?.totalBooksSold}
           sub={`Tồn kho: ${data?.totalBooksStock}`}
+          colorClass="text-blue-600 bg-blue-50"
         />
-        <Link to="/dashboard/manage-orders">
+        <Link to="/dashboard/manage-orders" className="block">
           <KPI
             icon={<MdShoppingCart size={24} />}
             title="Tổng đơn hàng"
             value={data?.totalOrders}
-            sub="Nhấn để quản lý đơn hàng"
+            sub="Nhấn để quản lý"
+            colorClass="text-red-600 bg-red-50"
           />
         </Link>
       </section>
 
+      {/* 2. Chart & Top Selling */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between mb-6">
@@ -143,6 +166,7 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Right: Top Selling Books */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col h-full">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -154,12 +178,13 @@ const Dashboard = () => {
             <Link
               to="/dashboard/manage-books"
               className="text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition-colors"
+              title="Quản lý sách"
             >
               <FiArrowRight size={20} />
             </Link>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[400px]">
             {topProducts.length > 0 ? (
               <div className="space-y-1">
                 {topProducts.map((book, index) => (
@@ -167,8 +192,8 @@ const Dashboard = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-400 py-10">
-                Chưa có dữ liệu bán hàng
+              <div className="flex flex-col items-center justify-center h-40 text-gray-400">
+                <p>Chưa có dữ liệu bán hàng</p>
               </div>
             )}
           </div>
@@ -184,6 +209,7 @@ const Dashboard = () => {
         </div>
       </section>
 
+      {/* 3. Footer Stats (Tùy chọn hiển thị thêm) */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
         <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm flex items-center gap-4">
           <div className="p-3 bg-green-50 text-green-600 rounded-full">

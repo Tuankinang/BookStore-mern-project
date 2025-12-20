@@ -18,7 +18,6 @@ const AdminRoute = ({ children }) => {
   }
 
   if (currentUser.role !== "admin") {
-    alert("Bạn không có quyền truy cập vào trang quản trị!");
     return <Navigate to="/" replace />;
   }
 

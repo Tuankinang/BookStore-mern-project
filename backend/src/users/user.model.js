@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    match: [/.+\@.+\..+/, "Vui lòng nhập email hợp lệ"],
   },
   password: {
     type: String,
@@ -34,6 +35,11 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, 10); //To hash a password
   next();
 });
+
+// Method so sánh mật khẩu (Gọi trực tiếp từ instance user)
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

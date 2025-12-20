@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const {
-  createAOrder,
+  createOrder,
   getOrderByEmail,
   getAllOrders,
   updateOrderStatus,
@@ -11,7 +11,7 @@ const {
 const verifyAdminToken = require("../middleware/verifyAdminToken.js");
 
 //tạo đơn hàng
-router.post("/", createAOrder);
+router.post("/", createOrder);
 
 //nhận đơn hàng qua email của người dùng
 router.get("/email/:email", getOrderByEmail);

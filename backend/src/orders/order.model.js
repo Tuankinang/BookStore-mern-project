@@ -9,6 +9,7 @@ const orderSchema = mongoose.Schema(
     email: {
       type: String,
       required: true,
+      match: [/.+\@.+\..+/, "Vui lòng nhập email hợp lệ"],
     },
     address: {
       city: {
@@ -20,7 +21,7 @@ const orderSchema = mongoose.Schema(
       zipcode: String,
     },
     phone: {
-      type: Number,
+      type: String,
       required: true,
     },
     productIds: [

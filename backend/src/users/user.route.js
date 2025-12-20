@@ -5,21 +5,32 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const Order = require("../orders/order.model");
 const JWT_SECRET = process.env.JWT_SECRET_KEY;
+const verifyAdminToken = require("../middleware/verifyAdminToken.js");
 
 // 1. ĐĂNG KÝ USER (Mặc định role là "user")
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ message: "User đã tồn tại" });
+    const { email, password } = req.body;
+    let { username } = req.body;
+
+    if (!username) {
+      username = email.split("@")[0];
     }
+
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email hoặc Username đã được sử dụng!" });
+    }
+
     const newUser = new User({
       username,
       email,
       password,
       role: "user",
     });
+
     await newUser.save();
     res.status(201).json({ message: "Đăng ký thành công", user: newUser });
   } catch (error) {
@@ -28,61 +39,64 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// 2. API ĐĂNG NHẬP ADMIN ---
-router.post("/admin", async (req, res) => {
+// 2. ĐĂNG NHẬP
+router.post("/login", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const admin = await User.findOne({ username });
-    if (!admin) {
-      res.status(404).send({ message: "Không tìm thấy Admin!" });
+    const user = await User.findOne({
+      $or: [{ username: username }, { email: username }],
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "Tài khoản không tồn tại!" });
     }
-    const isMatch = await bcrypt.compare(password, admin.password);
+
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).send({ message: "Mật khẩu không hợp lệ!" });
+      return res.status(401).json({ message: "Mật khẩu không đúng!" });
     }
+
     const token = jwt.sign(
-      { id: admin._id, username: admin.username, role: admin.role }, //https://www.npmjs.com/package/jsonwebtoken?activeTab=readme
-      JWT_SECRET, //require('crypto').randomBytes(32).toString('hex')
+      { id: user._id, username: user.username, role: user.role },
+      JWT_SECRET,
       { expiresIn: "1h" }
     );
+
     return res.status(200).json({
-      message: "Xác thực thành công",
+      message: "Đăng nhập thành công",
       token: token,
       user: {
-        _id: admin._id,
-        username: admin.username,
-        email: admin.email,
-        role: admin.role,
-        phone: admin.phone,
-        photoURL: admin.photoURL,
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        photoURL: user.photoURL,
       },
     });
   } catch (error) {
-    console.error("không thể đăng nhập với tư cách Admin", error);
-    res.status(401).json({ message: "không thể đăng nhập với tư cách Admin" });
+    console.error("Lỗi đăng nhập:", error);
+    res.status(500).json({ message: "Lỗi server khi đăng nhập" });
   }
 });
 
 // 3. LẤY DANH SÁCH USER (Cho trang Admin quản lý)
-router.get("/", async (req, res) => {
+router.get("/", verifyAdminToken, async (req, res) => {
   try {
-    const users = await User.find({}).select("-password");
+    const users = await User.find({})
+      .select("-password")
+      .sort({ createdAt: -1 });
     const usersWithOrderInfo = await Promise.all(
       users.map(async (user) => {
-        try {
-          const orderCount = await Order.countDocuments({
-            email: user.username,
-          });
-          return {
-            ...user.toObject(),
-            hasOrders: orderCount > 0,
-            totalOrders: orderCount,
-          };
-        } catch (err) {
-          return { ...user.toObject(), hasOrders: false, totalOrders: 0 };
-        }
+        const orderCount = await Order.countDocuments({ email: user.email });
+        return {
+          ...user.toObject(),
+          hasOrders: orderCount > 0,
+          totalOrders: orderCount,
+        };
       })
     );
+
     res.status(200).json(usersWithOrderInfo);
   } catch (error) {
     console.error("Lỗi lấy danh sách user:", error);
@@ -91,7 +105,7 @@ router.get("/", async (req, res) => {
 });
 
 // 4. XÓA USER
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verifyAdminToken, async (req, res) => {
   try {
     const { id } = req.params;
     const deletedUser = await User.findByIdAndDelete(id);
@@ -125,7 +139,7 @@ router.put("/profile/:id", async (req, res) => {
           .status(400)
           .json({ message: "Mật khẩu cũ không chính xác!" });
       }
-      user.password = newPassword; // Model sẽ tự hash lại
+      user.password = newPassword;
     }
 
     await user.save();

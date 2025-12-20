@@ -18,7 +18,7 @@ const Login = () => {
 
   const onSubmit = async (data) => {
     try {
-      const response = await axios.post(`${getBaseUrl()}/api/auth/admin`, {
+      const response = await axios.post(`${getBaseUrl()}/api/auth/login`, {
         username: data.email,
         password: data.password,
       });

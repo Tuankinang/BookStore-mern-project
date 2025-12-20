@@ -10,13 +10,13 @@ const ordersApi = createApi({
     prepareHeaders: (headers) => {
       const token = localStorage.getItem("token");
       if (token) {
-        headers.set("authorization", `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   }),
   endpoints: (builder) => ({
-    // Lấy tất cả orders
+    // 1. Tạo đơn hàng
     createOrder: builder.mutation({
       query: (newOrder) => ({
         url: "/",
@@ -25,15 +25,14 @@ const ordersApi = createApi({
       }),
       invalidatesTags: ["Orders"],
     }),
+
+    // 2. Lấy đơn hàng theo Email (User xem lịch sử mua)
     getOrderByEmail: builder.query({
-      query: (email) => {
-        return {
-          url: `/email/${email}`,
-        };
-      },
+      query: (email) => `/email/${email}`,
       providesTags: ["Orders"],
     }),
-    // Lấy TẤT CẢ đơn hàng (Admin)
+
+    //3.  Lấy TẤT CẢ đơn hàng (Admin)
     getAllOrders: builder.query({
       query: () => "/",
       providesTags: ["Orders"],

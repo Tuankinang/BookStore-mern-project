@@ -27,22 +27,7 @@ export const AuthProvide = ({ children }) => {
   const login = (token, userData) => {
     localStorage.setItem("token", token);
     localStorage.setItem("user", JSON.stringify(userData));
-    setCurrentUser(userData); // Cập nhật state để React render lại giao diện ngay
-  };
-
-  // đăngkí    firebase docs/build/authentication/web/get started
-  const registerUser = async (email, password) => {
-    return await createUserWithEmailAndPassword(auth, email, password);
-  };
-
-  // đăng nhập
-  const loginUser = async (email, password) => {
-    return await signInWithEmailAndPassword(auth, email, password);
-  };
-
-  // đăng nhập = google   firebase docs/build/authentication/web/đăng nhập = google
-  const signInWithGoogle = async () => {
-    return await signInWithPopup(auth, googleProvider);
+    setCurrentUser(userData);
   };
 
   // đăng xuất  firebase docs/build/authentication/web/ps authentication
@@ -53,26 +38,37 @@ export const AuthProvide = ({ children }) => {
     return signOut(auth);
   };
 
+  // đăng nhập = google   firebase docs/build/authentication/web/đăng nhập = google
+  const signInWithGoogle = async () => {
+    return await signInWithPopup(auth, googleProvider);
+  };
+
   //Người quản lý   firebase docs/build/authentication/web/manage user
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    const localUser = localStorage.getItem("user");
+
+    if (token && localUser) {
+      try {
+        setCurrentUser(JSON.parse(localUser));
+        setLoading(false);
+        return;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         const { email, displayName, photoURL } = user;
-        const userData = {
+        setCurrentUser({
           email,
           username: displayName,
-          photo: photoURL,
-        };
-        setCurrentUser(userData);
+          photoURL,
+          role: "user",
+        });
       } else {
-        const localUser = localStorage.getItem("user");
-        const token = localStorage.getItem("token");
-
-        if (!token || !localUser) {
-          setCurrentUser(null);
-        } else {
-          setCurrentUser(JSON.parse(localUser));
-        }
+        if (!token) setCurrentUser(null);
       }
       setLoading(false);
     });
@@ -84,8 +80,6 @@ export const AuthProvide = ({ children }) => {
     currentUser,
     loading,
     login,
-    registerUser,
-    loginUser,
     signInWithGoogle,
     logout,
   };

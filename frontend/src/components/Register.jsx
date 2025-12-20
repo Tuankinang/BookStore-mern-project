@@ -8,29 +8,30 @@ import getBaseUrl from "../utils/baseUrl";
 
 const Register = () => {
   const [message, setMessage] = useState("");
-  const { registerUser, signInWithGoogle } = useAuth();
+  const { signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm();
 
   const onSubmit = async (data) => {
     try {
-      await registerUser(data.email, data.password);
       await axios.post(`${getBaseUrl()}/api/auth/register`, {
-        username: data.email,
         email: data.email,
         password: data.password,
       });
 
-      alert("Đăng ký thành công!");
+      alert("Đăng ký tài khoản thành công! Vui lòng đăng nhập.");
       navigate("/login");
     } catch (error) {
-      setMessage("Đăng ký thất bại. Vui lòng thử lại!");
-      console.error(error);
+      const errorMsg =
+        error.response?.data?.message || "Đăng ký thất bại. Vui lòng thử lại!";
+      setMessage(errorMsg);
+      console.error("Register Error:", error);
     }
   };
 

@@ -4,13 +4,12 @@ import getBaseUrl from "../../../utils/baseUrl";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${getBaseUrl()}/api/books`,
-  credentials: "include",
-  prepareHeaders: (Headers) => {
+  prepareHeaders: (headers) => {
     const token = localStorage.getItem("token");
     if (token) {
-      Headers.set("Authorization", `Bearer ${token}`);
+      headers.set("Authorization", `Bearer ${token}`);
     }
-    return Headers;
+    return headers;
   },
 });
 
@@ -19,42 +18,39 @@ const booksApi = createApi({
   baseQuery,
   tagTypes: ["Books"],
   endpoints: (builder) => ({
-    // 1. Lấy tất cả sách
+    // 1. Lấy tất cả sách (Public)
     fetchAllBooks: builder.query({
       query: () => "/",
       providesTags: ["Books"],
     }),
 
-    // 2. Lấy 1 cuốn sách theo ID
+    // 2. Lấy 1 cuốn sách (Public)
     fetchBookById: builder.query({
       query: (id) => `/${id}`,
-      providesTags: (results, error, id) => [{ type: "Books", id }],
+      providesTags: (result, error, id) => [{ type: "Books", id }],
     }),
 
-    // 3. Thêm sách (Cần Token)
+    // 3. Thêm sách (Admin - Cần Token)
     addBook: builder.mutation({
       query: (newBook) => ({
-        url: `/create-book`,
+        url: "/create-book",
         method: "POST",
         body: newBook,
       }),
       invalidatesTags: ["Books"],
     }),
 
-    // 4. Sửa sách (Cần Token)
+    // 4. Sửa sách (Admin - Cần Token)
     updateBook: builder.mutation({
       query: ({ id, ...rest }) => ({
         url: `/edit/${id}`,
         method: "PUT",
         body: rest,
-        headers: {
-          "Content-Type": "application/json",
-        },
       }),
       invalidatesTags: ["Books"],
     }),
 
-    // 5. Xóa sách (Cần Token)
+    // 5. Xóa sách (Admin - Cần Token)
     deleteBook: builder.mutation({
       query: (id) => ({
         url: `/${id}`,
@@ -72,4 +68,5 @@ export const {
   useDeleteBookMutation,
   useUpdateBookMutation,
 } = booksApi;
+
 export default booksApi;
